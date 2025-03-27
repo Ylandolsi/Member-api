@@ -1,0 +1,18 @@
+# Ignore build output directories
+bin/
+obj/
+
+# Ignore Rider project files
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Ignore other files
+*.log
+*.vs/
+.vscode/
+
+# Ignore launch settings
+MemberOnly.Api/MemberOnly.Api/Properties/launchSettings.json

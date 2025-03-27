@@ -1,0 +1,6 @@
+@MemberOnly.Api_HostAddress = http://localhost:5080
+
+GET {{MemberOnly.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
