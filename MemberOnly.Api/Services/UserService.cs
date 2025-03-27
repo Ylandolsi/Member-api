@@ -37,6 +37,9 @@ public class UserService
             .Where(x => x.Username == username )
             .ToListAsync();
     }
+    
+    
+    
 
     public async Task<UserInfo> GetUserInfoAsync(string username)
     {

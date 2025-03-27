@@ -24,6 +24,17 @@ public class UserController : ControllerBase
         _logger = logger;
     }
 
+    [HttpGet("myposts")]
+    [Authorize]
+    public async Task<IActionResult> GetMyPosts()
+    {
+        var currentUsernameClaim = User.FindFirst(JWTClaims.Name);
+        if (currentUsernameClaim == null)
+        {
+            return Forbid();
+        }
+        return await GetPostsByUserName(currentUsernameClaim.Value);
+    }
 
     [HttpGet("{username}/posts")]
     [Authorize]
@@ -43,6 +54,27 @@ public class UserController : ControllerBase
         var posts = await _userService.GetPostsAsyncByUsername(username);
         return Ok(posts);
     }
+
+    [HttpGet("{username}/info")]
+    [Authorize]
+    public async Task<IActionResult> GetUserInfo(string username)
+    {
+        var currentUsernameClaim = User.FindFirst(JWTClaims.Name);
+        if (currentUsernameClaim == null)
+        {
+            return Forbid();
+        }
+
+        if (!User.IsInRole("Admin") && currentUsernameClaim.Value != username)
+        {
+            return Forbid();
+        }
+        
+        var info = await _userService.GetUserInfoAsync(username);   
+        return Ok(info);
+        
+    }
+    
 
     [HttpPost("register")]
     public async Task<IActionResult> RegisterUser(UserRegister UserReg)
