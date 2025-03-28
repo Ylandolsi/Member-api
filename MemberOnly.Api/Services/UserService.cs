@@ -33,16 +33,30 @@ public class UserService
     }
 
 
-
-    public async Task<List<Post>> GetPostsAsyncByUsername(string username)
+    public async Task<bool> UserHasCompletedActionAsync(string username)
     {
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Username == username);
+        if (user == null)
+        {
+            _logger.LogWarning("Attempt to check action completion for non-existent user: {Username}", username);
+            throw new InvalidOperationException("User not found");
+        }
 
-        return await _context.Posts
-            .Where(x => x.Username == username )
-            .ToListAsync();
+        return user.HasCompletedAction;
     }
     
-    
+    public async Task UserCompletedActionAsync(string username)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Username == username);
+        if (user == null)
+        {
+            _logger.LogWarning("Attempt to mark action as completed for non-existent user: {Username}", username);
+            throw new InvalidOperationException("User not found");
+        }
+
+        user.HasCompletedAction = true;
+        await _context.SaveChangesAsync();
+    }
     
 
     public async Task<UserInfo> GetUserInfoAsync(string username)

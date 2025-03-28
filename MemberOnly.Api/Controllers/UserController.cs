@@ -14,16 +14,14 @@ public class UserController : ControllerBase
 {
     private readonly UserService _userService;
     private readonly RefreshTokenService _refreshTokenService;
-    private readonly TokenProvider _tokenProvider;
     private readonly ILogger<UserController> _logger;
 
     public UserController(UserService userService, RefreshTokenService refreshTokenService,
-        ILogger<UserController> logger , TokenProvider tokenProvider)
+        ILogger<UserController> logger)
     {
         _userService = userService;
         _refreshTokenService = refreshTokenService;
         _logger = logger;
-        _tokenProvider = tokenProvider;
     }
     [HttpGet("check-username")]
     
@@ -33,40 +31,12 @@ public class UserController : ControllerBase
         {
             return BadRequest();
         }
-        var posts = await _userService.UserNameCheckAsync(username);
-        return Ok(posts);
+        var isAvaialble = await _userService.UserNameCheckAsync(username);
+        return Ok(new {available = !isAvaialble});
     }
 
-    [HttpGet("myposts")]
-    [Authorize]
-    public async Task<IActionResult> GetMyPosts()
-    {
-        var currentUsernameClaim = User.FindFirst(JWTClaims.Name);
-        if (currentUsernameClaim == null)
-        {
-            return Forbid();
-        }
-        return await GetPostsByUserName(currentUsernameClaim.Value);
-    }
 
-    [HttpGet("{username}/posts")]
-    [Authorize]
-    public async Task<IActionResult> GetPostsByUserName(string username)
-    {
-        var currentUsernameClaim = User.FindFirst(JWTClaims.Name);
-        if (currentUsernameClaim == null)
-        {
-            return Forbid();
-        }
 
-        if (!User.IsInRole("Admin") && currentUsernameClaim.Value != username)
-        {
-            return Forbid();
-        }
-
-        var posts = await _userService.GetPostsAsyncByUsername(username);
-        return Ok(posts);
-    }
 
     [HttpGet("{username}/info")]
     [Authorize]
@@ -87,6 +57,39 @@ public class UserController : ControllerBase
         return Ok(info);
         
     }
+
+    [HttpGet("check-completion")]
+    [Authorize]
+    public async Task<IActionResult> UserHasCompletedAction()
+    {
+        var currentUsernameClaim = User.FindFirst(JWTClaims.Name);
+        if (currentUsernameClaim == null)
+        {
+            return Forbid();
+        }
+
+        var hasCompletedAction = await _userService.UserHasCompletedActionAsync(currentUsernameClaim.Value);
+        return Ok(new {Completed = hasCompletedAction });
+    }
+
+    [HttpPost("complete-action")]
+    [Authorize]
+    public async Task<IActionResult> UserCompletedAction()
+    {
+        var currentUsernameClaim = User.FindFirst(JWTClaims.Name);
+        if (currentUsernameClaim == null)
+        {
+            return Forbid();
+        }
+
+        await _userService.UserCompletedActionAsync(currentUsernameClaim.Value);
+        return Ok(new { message = "Action marked as completed." });
+    
+    }
+
+
+
+    
     
 
     [HttpPost("register")]
@@ -129,60 +132,7 @@ public class UserController : ControllerBase
         }
     }
 
-    [HttpPost("refresh-token")]
-    [Authorize]
-    public async Task<IActionResult> RefreshToken(RefreshTokenFront refreshTokenRequest)
-    {
-        try
-        {
-            var refreshToken = await _refreshTokenService.ValidateAndRotateTokenAsync(refreshTokenRequest);
-            return Ok(refreshToken);
-        }
-        catch (InvalidOperationException ex)
-        {
-            _logger.LogWarning(ex, "Invalid refresh token: {Message}", ex.Message);
-            return Unauthorized(new { message = "Invalid or expired refresh token." });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error refreshing token");
-            return StatusCode(500, new { message = "An unexpected error occurred while refreshing the token." });
-        }
-    }
 
-
-    [HttpGet("validate")]
-    public IActionResult ValidateJWT()
-    {
-        // Extract token from Authorization header
-        var authHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
-    
-        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
-            return Unauthorized(new { valid = false, message = "Authorization header missing or invalid." });
-    
-        // Remove "Bearer " prefix
-        var token = authHeader.Substring(7);
-    
-        try
-        {
-            var principal = _tokenProvider.validate(token);
-            if (principal == null)
-                return Unauthorized(new { valid = false, message = "Invalid token." });
-            
-            //var claims = principal.Claims.Select(c => new { c.Type, c.Value });
-            var username = principal.FindFirst(JWTClaims.Name)?.Value;
-            //return Ok(new { valid = true, claims });
-            
-            return Ok(new { valid = true, username });
-        }
-        catch (Exception)
-        {
-            return Unauthorized(new { valid = false, message = "Invalid token." });
-        }
-    }
-    
-
-    
 
 
     [HttpPost("logout")]

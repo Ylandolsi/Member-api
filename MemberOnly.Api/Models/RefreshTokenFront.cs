@@ -12,9 +12,5 @@ public class RefreshTokenFront
 
         public string RefreshToken { get; set; } = string.Empty;
         
-        // DateTime Expires { get; set; }
-        
-        //public bool IsActive { get; set; } = true;
-
 
 }

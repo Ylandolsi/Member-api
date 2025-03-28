@@ -50,7 +50,7 @@ namespace MemberOnly.Api.Migrations
 
                     b.HasIndex("Username");
 
-                    b.ToTable("Posts");
+                    b.ToTable("Posts", (string)null);
                 });
 
             modelBuilder.Entity("MemberOnly.Api.Models.User", b =>
@@ -77,7 +77,7 @@ namespace MemberOnly.Api.Migrations
 
                     b.HasKey("Username");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("MemberOnly.Api.Models.UserRefreshTokens", b =>
@@ -104,7 +104,7 @@ namespace MemberOnly.Api.Migrations
 
                     b.HasIndex("UserName");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("MemberOnly.Api.Models.Post", b =>

@@ -17,7 +17,10 @@ builder.Services.AddSingleton<PasswordHasher>();
 builder.Services.AddSingleton<TokenProvider>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<RefreshTokenService>();
+builder.Services.AddScoped<PostService>();
 
+// Register the DatabaseSeeder service
+builder.Services.AddScoped<DatabaseSeeder>();
 
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -61,6 +64,22 @@ if (app.Environment.IsDevelopment())
 
     app.ApplyMigrations();
 }    
+
+// Run the database seeder
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var seeder = services.GetRequiredService<DatabaseSeeder>();
+        await seeder.SeedAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database");
+    }
+}
 
 app.UseCors("AllowSpecificOrigins");// Map controller endpoints
 app.UseAuthentication();
