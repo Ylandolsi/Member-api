@@ -14,14 +14,27 @@ public class UserController : ControllerBase
 {
     private readonly UserService _userService;
     private readonly RefreshTokenService _refreshTokenService;
+    private readonly TokenProvider _tokenProvider;
     private readonly ILogger<UserController> _logger;
 
     public UserController(UserService userService, RefreshTokenService refreshTokenService,
-        ILogger<UserController> logger)
+        ILogger<UserController> logger , TokenProvider tokenProvider)
     {
         _userService = userService;
         _refreshTokenService = refreshTokenService;
         _logger = logger;
+        _tokenProvider = tokenProvider;
+    }
+    [HttpGet("check-username")]
+    
+    public async Task<IActionResult> UserNameCheck([FromQuery]string username)
+    {
+        if( username == null)
+        {
+            return BadRequest();
+        }
+        var posts = await _userService.UserNameCheckAsync(username);
+        return Ok(posts);
     }
 
     [HttpGet("myposts")]
@@ -117,6 +130,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("refresh-token")]
+    [Authorize]
     public async Task<IActionResult> RefreshToken(RefreshTokenFront refreshTokenRequest)
     {
         try
@@ -135,6 +149,40 @@ public class UserController : ControllerBase
             return StatusCode(500, new { message = "An unexpected error occurred while refreshing the token." });
         }
     }
+
+
+    [HttpGet("validate")]
+    public IActionResult ValidateJWT()
+    {
+        // Extract token from Authorization header
+        var authHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
+    
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            return Unauthorized(new { valid = false, message = "Authorization header missing or invalid." });
+    
+        // Remove "Bearer " prefix
+        var token = authHeader.Substring(7);
+    
+        try
+        {
+            var principal = _tokenProvider.validate(token);
+            if (principal == null)
+                return Unauthorized(new { valid = false, message = "Invalid token." });
+            
+            //var claims = principal.Claims.Select(c => new { c.Type, c.Value });
+            var username = principal.FindFirst(JWTClaims.Name)?.Value;
+            //return Ok(new { valid = true, claims });
+            
+            return Ok(new { valid = true, username });
+        }
+        catch (Exception)
+        {
+            return Unauthorized(new { valid = false, message = "Invalid token." });
+        }
+    }
+    
+
+    
 
 
     [HttpPost("logout")]
@@ -160,4 +208,7 @@ public class UserController : ControllerBase
             return StatusCode(500, new { message = "An unexpected error occurred during logout." });
         }
     }
+
+
+
 }

@@ -27,6 +27,10 @@ public class UserService
         _tokenProvider = tokenProvider;
     }
 
+    public async Task<bool> UserNameCheckAsync(string username)
+    {
+        return await _context.Users.AnyAsync(x => x.Username == username);
+    }
 
 
 

@@ -37,6 +37,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins",
+        builder =>
+        {
+            builder.WithOrigins(
+                    "http://localhost:5173",      
+                    "http://localhost:5080"  )   // Add the API's port for direct browser access
+                    //"https://inventory-api-la8y.onrender.com",     
+                    //"https://inventory-frontend-peach.vercel.app")     // Production domain
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -47,11 +62,10 @@ if (app.Environment.IsDevelopment())
     app.ApplyMigrations();
 }    
 
+app.UseCors("AllowSpecificOrigins");// Map controller endpoints
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseHttpsRedirection();
-
-// Map controller endpoints
 app.MapControllers();
 
 app.Run();

@@ -46,6 +46,44 @@ namespace MemberOnly.Api.Services.Infrastructure
 
             return new Tokens { AccessToken = token, RefreshToken = refreshToken };
         }
+        
+        
+        public ClaimsPrincipal validate(string token)
+        {
+            string secretKey = configuration["Jwt:Secret"]!;
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = securityKey,
+                ValidateIssuer = true,
+                ValidIssuer = configuration["Jwt:Issuer"],
+                ValidateAudience = true,
+                ValidAudience = configuration["Jwt:Audience"],
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken securityToken);
+                var jwtSecurityToken = securityToken as JwtSecurityToken;
+
+                if (jwtSecurityToken == null ||
+                    !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    // if cast failed or the algorithm is not HMAC-SHA256
+                    throw new SecurityTokenException("Invalid token");
+                }
+
+                return principal;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
 
 
         // If the JWT token is expired, this method retrieves the principal.
@@ -70,6 +108,7 @@ namespace MemberOnly.Api.Services.Infrastructure
             if (jwtSecurityToken == null ||
                 !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
             {
+                // if cast failed or the algorithm is not HMAC-SHA256
                 throw new SecurityTokenException("Invalid token");
             }
 
