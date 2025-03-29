@@ -13,7 +13,7 @@ namespace MemberOnly.Api.Services
         private readonly ApplicationDbContext _context;
         private readonly ILogger<RefreshTokenService> _logger;
         private readonly TokenProvider _tokenProvider;
-        private readonly TimeSpan _refreshTokenLifetime = TimeSpan.FromDays(7); 
+        private readonly TimeSpan _refreshTokenLifetime = TimeSpan.FromMinutes(5); 
 
         public RefreshTokenService(
             ApplicationDbContext context,

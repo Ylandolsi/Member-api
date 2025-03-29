@@ -14,6 +14,7 @@ public class PostController : ControllerBase
     private readonly ILogger<PostController> _logger;
     private readonly PostService _postService;
     
+    
     public PostController(ILogger<PostController> logger, PostService postService)
     {
         _logger = logger;
@@ -119,6 +120,22 @@ public class PostController : ControllerBase
     public async Task<IActionResult> GetAllPosts(){
         var posts = await _postService.GetAllPostsAsync();
         return Ok(posts);
+    }
+    
+    [HttpPost]
+    [Route("create")]
+    [Authorize]
+    public async Task<IActionResult> CreatePost([FromBody] PostAdd addPost)
+    {
+        _logger.LogInformation("Creating new post" , addPost);
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+        var currentUsernameClaim = User.FindFirst(JWTClaims.Name);
+        if (currentUsernameClaim == null)
+            return Forbid();
+            
+        var post = await _postService.CreatePostAsync(currentUsernameClaim.Value, addPost.Content, addPost.Title);
+        return CreatedAtAction(nameof(GetPostById), new { id = post.Id }, post);
     }
 
 }

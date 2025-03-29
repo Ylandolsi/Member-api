@@ -45,6 +45,21 @@ public class PostService
             .FirstOrDefaultAsync(x => x.Id == id);
     }
     
+    public async Task<Post> CreatePostAsync(string username, string content , string title)
+    {
+        var post = new Post
+        {
+            Username = username,
+            Content = content,
+            CreatedAt = DateTime.UtcNow ,
+            Title = title
+        };
+        
+        _context.Posts.Add(post);
+        await _context.SaveChangesAsync();
+        return post;
+    }
+    
 
     
     public async Task DeletePostAsync(int id)
