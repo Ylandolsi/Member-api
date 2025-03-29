@@ -1,0 +1,32 @@
+# Ignore development and git files
+.git/
+.github/
+.gitignore
+.gitattributes
+.vs/
+.vscode/
+.idea/
+*.sln.iml
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Ignore build output
+**/bin/
+**/obj/
+**/out/
+
+# Ignore local configuration files
+**/appsettings.Development.json
+
+# Ignore test files
+**/[Tt]est[Rr]esults/
+coverage/
+
+# Ignore other files
+**/*.log
+**/*.tmp
+**/*.temp
+**/.DS_Store
+**/Thumbs.db
